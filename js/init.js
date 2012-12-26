@@ -19,12 +19,14 @@ define([
 					'editorWrapper': '<div class="{{className.editorWrapper}}">',
 					'editorEnhaced': '<div class="{{className.editor}}">{{{html.defaultBlockElement}}}</div>',
 					'defaultBlockElement': '<p/>',
-					'defaultInlineBlockElement': '<span/>'
+					'defaultInlineBlockElement': '<span/>',
+					'clipboardTemp': '<textarea class="{{className.clipboardTemp}}"></textarea>'
 				},
 				'className': {
 					'originalInput': 'originalInput',
 					'editorWrapper': 'editorWrapper',
-					'editor': 'editor'
+					'editor': 'editor',
+					'clipboardTemp': 'clipboardTemp'
 				},
 				'keyMap': {
 					'8': { // [DELETE]
@@ -87,13 +89,16 @@ define([
 				module.$editor.on('input',function(e){
 					module.onInput(e);
 				});
+				module.$editor.on('paste',function(e){
+					module.onPaste(e);
+				});
 				module.$wrapper.height(module.$input.height());
 				//module.$wrapper.width(module.$input.width());
 				module.$input.addClass(module.config.className.originalInput);
 				module.syncInput();
 			},
 			'onKeyDown': function(e){
-				console.log(e);
+				//console.log(e);
 				var module = this,
 					method = false,
 					keyConfig = module.config.keyMap[e.keyCode],
@@ -113,6 +118,31 @@ define([
 			'onInput': function(e){
 				var module = this;
 				module.syncInput();
+			},
+			'onPaste': function(e){
+				var module = this;
+					$clipboardTempElement = module.$wrapper.append(mustache.render(module.config.html.clipboardTemp,module.config)).find('.'+module.config.className.clipboardTemp), // Create a temporary textarea to use as a physical clipboard
+					cursorSelection = window.getSelection(),
+					cursorSelectionRange = cursorSelection.getRangeAt(0),
+					$cursorSelectionParentNode = $(cursorSelection.anchorNode.parentNode),
+					content = $cursorSelectionParentNode.html(),
+					tag = (typeof tag == 'string')? tag : module.config.html.defaultInlineBlockElement,
+					newContent = '',
+					clipboard = '';
+
+				// Before the paste goes through, place the cursor in the temporary textarea.
+				$clipboardTempElement.focus();
+
+				// Wait a cycle for the paste to go through.
+				setTimeout(function(){
+					console.log($clipboardTempElement.val());
+					var clipboard = $clipboardTempElement.val().replace(/\n/g,'<br>'),
+						newContent = content.substring(0,cursorSelectionRange.startOffset)
+							+clipboard
+							+content.substring(cursorSelectionRange.endOffset,content.length);
+					$cursorSelectionParentNode.html(newContent);
+					$clipboardTempElement.remove();
+				},0);
 			},
 			'syncInput': function(){
 				var module = this;
@@ -236,10 +266,10 @@ define([
 						content = $cursorSelectionParentNode.html(),
 						tag = (typeof tag == 'string')? tag : module.config.html.defaultInlineBlockElement,
 						newContent = content.substring(0,cursorSelectionRange.startOffset)
-						+(tag.replace('/',''))
-						+content.substring(cursorSelectionRange.startOffset,cursorSelectionRange.endOffset)
-						+(tag.replace('/','').replace('<','</'))
-						+content.substring(cursorSelectionRange.endOffset,content.length);
+							+(tag.replace('/',''))
+							+content.substring(cursorSelectionRange.startOffset,cursorSelectionRange.endOffset)
+							+(tag.replace('/','').replace('<','</'))
+							+content.substring(cursorSelectionRange.endOffset,content.length);
 
 					$cursorSelectionParentNode.html(newContent);
 					e.preventDefault();
