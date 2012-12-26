@@ -71,7 +71,10 @@ define([
 			},
 			'init': function(){
 				var module = this;
+				
+				// Build a config using the defaults as a base
 				module.config = $.extend({},module.defaults,config);
+				// Optionally call create(). If the DOM isn't "Ready" yet you may wish to wait.
 				if(module.config.onInitCreate) module.create();
 			},
 			'create': function(){
@@ -88,6 +91,9 @@ define([
 				});
 				module.$editor.on('input',function(e){
 					module.onInput(e);
+				});
+				module.$editor.on('DOMSubtreeModified',function(e){
+					module.onDomChange(e);
 				});
 				module.$editor.on('paste',function(e){
 					module.onPaste(e);
@@ -117,22 +123,21 @@ define([
 			},
 			'onInput': function(e){
 				var module = this;
-				module.syncInput();
 			},
 			'onPaste': function(e){
 				var module = this;
 					$clipboardTempElement = module.$wrapper.append(mustache.render(module.config.html.clipboardTemp,module.config)).find('.'+module.config.className.clipboardTemp), // Create a temporary textarea to use as a physical clipboard
 					cursorSelection = window.getSelection(),
 					cursorSelectionRange = cursorSelection.getRangeAt(0),
-					$cursorSelectionParentNode = $(cursorSelection.anchorNode.parentNode),
-					content = $cursorSelectionParentNode.html(),
+					$cursorSelectionNode = ($(cursorSelection.baseNode)[0].nodeName == '#text')? $(cursorSelection.baseNode.parentNode) : $(cursorSelection.baseNode), // If the current node is just partial "#text" we want the full DOM element that contains it.
+					content = $cursorSelectionNode.html(),
 					tag = (typeof tag == 'string')? tag : module.config.html.defaultInlineBlockElement,
 					newContent = '',
 					clipboard = '';
-
+console.log(cursorSelection.baseNode);
 				// Before the paste goes through, place the cursor in the temporary textarea.
 				$clipboardTempElement.focus();
-
+console.log($cursorSelectionNode);
 				// Wait a cycle for the paste to go through.
 				setTimeout(function(){
 					console.log($clipboardTempElement.val());
@@ -140,16 +145,24 @@ define([
 						newContent = content.substring(0,cursorSelectionRange.startOffset)
 							+clipboard
 							+content.substring(cursorSelectionRange.endOffset,content.length);
-					$cursorSelectionParentNode.html(newContent);
+					$cursorSelectionNode.html(newContent);
 					$clipboardTempElement.remove();
 				},0);
 			},
-			'syncInput': function(){
+			'onDomChange': function(){
 				var module = this;
+				
+				module.syncInput();
+			},
+			'syncInput': function(){
+				console.log('syncInput');
+				var module = this;
+				
 				module.$input.html(module.$editor.html());
 			},
 			'syncEditor': function(){
 				var module = this;
+				
 				module.$editor.html(module.$input.html());
 			},
 			'inputsRestore': function(){
