@@ -1,5 +1,5 @@
 define([
-		'contextualContentEditor/js/3rdparty/jquery/shim',
+		'contextualContentEditor/js/shims/jquery',
 		'contextualContentEditor/js/3rdparty/mustache/mustache',
 		'contextualContentEditor/configuration'
 	],function(

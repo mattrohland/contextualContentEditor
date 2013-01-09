@@ -1,9 +1,6 @@
 [submodule "js/3rdparty/requirejs"]
 	path = js/3rdparty/requirejs
 	url = https://github.com/jrburke/requirejs.git
-[submodule "js/3rdparty/jquery"]
-	path = js/3rdparty/jquery
-	url = https://github.com/jquery/jquery.git
 [submodule "js/3rdparty/mustache"]
 	path = js/3rdparty/mustache
 	url = https://github.com/janl/mustache.js.git
